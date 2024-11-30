@@ -40,6 +40,7 @@ local AccuracyLine = Drawingnew("Line")
 local SmoothnessLine = Drawingnew("Line")
 local HideButton = Drawingnew("Text")
 local ToggleCircleButton = Drawingnew("Text")
+local DestroyCircleButton = Drawingnew("Text")
 
 -- Global State Variables
 local Running = false
@@ -59,17 +60,7 @@ SmoothnessLine.Thickness = 2
 AccuracyLine.Visible = false
 SmoothnessLine.Visible = false
 
-HideButton.Text = "Hide GUI"
-HideButton.Position = Vector2new(100, 50)
-HideButton.Size = Vector2new(100, 50)
-HideButton.Visible = true
-
-ToggleCircleButton.Text = "Toggle Circle"
-ToggleCircleButton.Position = Vector2new(100, 150)
-ToggleCircleButton.Size = Vector2new(100, 50)
-ToggleCircleButton.Visible = true
-
--- Settings GUI Panel
+-- Create GUI for settings
 local SettingsPanel = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
 local Frame = Instance.new("Frame", SettingsPanel)
 Frame.Position = UDim2.new(0, 50, 0, 50)
@@ -101,19 +92,19 @@ ToggleButton.Text = Settings.Enabled and "Disable Aimbot" or "Enable Aimbot"
 ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- Functions
+-- Function to Hide or Show the GUI
 local function ToggleVisibility()
-    if FOVCircle.Visible then
-        FOVCircle.Visible = false
-        AccuracyLine.Visible = false
-        SmoothnessLine.Visible = false
-    else
-        FOVCircle.Visible = true
-        AccuracyLine.Visible = true
-        SmoothnessLine.Visible = true
-    end
+    Frame.Visible = not Frame.Visible
 end
 
+-- Function to Destroy the Circle
+local function DestroyCircle()
+    FOVCircle.Visible = false
+    AccuracyLine.Visible = false
+    SmoothnessLine.Visible = false
+end
+
+-- Functions to Update Line and Position of Aimbot
 local function UpdateLinePositions()
     AccuracyLine.From = GetMouseLocation(UserInputService)
     AccuracyLine.To = Vector2new(GetMouseLocation(UserInputService).X + Accuracy, GetMouseLocation(UserInputService).Y)
@@ -169,7 +160,7 @@ local function HandleInput(input)
     if input.UserInputType == Settings.TriggerKey then
         Running = not Running
         if Running then
-            ToggleVisibility() -- Show the FOV circle when aimbot is activated
+            FOVCircle.Visible = true -- Show the FOV circle when aimbot is activated
         else
             FOVCircle.Visible = false
             AccuracyLine.Visible = false
@@ -185,16 +176,19 @@ local function Update()
     end
 end
 
--- UI Event Handlers
+-- Event Handlers
 HideButton.MouseButton1Click:Connect(function()
-    FOVCircle.Visible = false
-    AccuracyLine.Visible = false
-    SmoothnessLine.Visible = false
+    ToggleVisibility() -- Toggle the entire GUI visibility
 end)
 
 ToggleCircleButton.MouseButton1Click:Connect(function()
-    CircleVisible = not CircleVisible
-    FOVCircle.Visible = CircleVisible
+    FOVCircle.Visible = not FOVCircle.Visible
+    AccuracyLine.Visible = not AccuracyLine.Visible
+    SmoothnessLine.Visible = not SmoothnessLine.Visible
+end)
+
+DestroyCircleButton.MouseButton1Click:Connect(function()
+    DestroyCircle() -- Completely hide and remove the FOV Circle and lines
 end)
 
 SensitivitySlider.MouseButton1Click:Connect(function()
