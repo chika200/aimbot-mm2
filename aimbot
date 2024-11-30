@@ -1,3 +1,5 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/chika200/aimbot-mm2/refs/heads/main/aimbot"))()
+
 local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -8,7 +10,7 @@ local Holding = false
 
 _G.AimbotEnabled = true
 _G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
-_G.AimPart = "Head" -- Where the aimbot script would lock at.
+_G.AimPart = "UpperTorso" -- Locking the aim at the torso (R15) or change to "Torso" for R6 rigs.
 _G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
 
 local function GetClosestPlayer()
@@ -72,6 +74,9 @@ end)
 
 RunService.RenderStepped:Connect(function()
     if Holding == true and _G.AimbotEnabled == true then
-        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
+        local target = GetClosestPlayer()
+        if target and target.Character and target.Character:FindFirstChild(_G.AimPart) then
+            TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, target.Character[_G.AimPart].Position)}):Play()
+        end
     end
 end)
