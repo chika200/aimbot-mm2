@@ -52,6 +52,7 @@ FOVCircle.Thickness = 2
 FOVCircle.Radius = FOVSettings.Radius
 FOVCircle.Color = FOVSettings.Color
 FOVCircle.Visible = false
+FOVCircle.Position = Vector2new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
 AccuracyLine.Thickness = 2
 SmoothnessLine.Thickness = 2
@@ -67,6 +68,38 @@ ToggleCircleButton.Text = "Toggle Circle"
 ToggleCircleButton.Position = Vector2new(100, 150)
 ToggleCircleButton.Size = Vector2new(100, 50)
 ToggleCircleButton.Visible = true
+
+-- Settings GUI Panel
+local SettingsPanel = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
+local Frame = Instance.new("Frame", SettingsPanel)
+Frame.Position = UDim2.new(0, 50, 0, 50)
+Frame.Size = UDim2.new(0, 300, 0, 400)
+Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Frame.BackgroundTransparency = 0.5
+
+-- Sensitivity Slider
+local SensitivitySlider = Instance.new("TextButton", Frame)
+SensitivitySlider.Size = UDim2.new(0, 200, 0, 50)
+SensitivitySlider.Position = UDim2.new(0, 50, 0, 50)
+SensitivitySlider.Text = "Sensitivity: " .. Settings.Sensitivity2
+SensitivitySlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+SensitivitySlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- LockPart Dropdown
+local LockPartDropdown = Instance.new("TextButton", Frame)
+LockPartDropdown.Size = UDim2.new(0, 200, 0, 50)
+LockPartDropdown.Position = UDim2.new(0, 50, 0, 150)
+LockPartDropdown.Text = "LockPart: " .. Settings.LockPart
+LockPartDropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+LockPartDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- Enable/Disable Toggle Button
+local ToggleButton = Instance.new("TextButton", Frame)
+ToggleButton.Size = UDim2.new(0, 200, 0, 50)
+ToggleButton.Position = UDim2.new(0, 50, 0, 250)
+ToggleButton.Text = Settings.Enabled and "Disable Aimbot" or "Enable Aimbot"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 
 -- Functions
 local function ToggleVisibility()
@@ -152,23 +185,37 @@ local function Update()
     end
 end
 
--- Input Events
-UserInputService.InputBegan:Connect(HandleInput)
-
-RunService.RenderStepped:Connect(Update)
-
--- Hide the GUI when HideButton is pressed
+-- UI Event Handlers
 HideButton.MouseButton1Click:Connect(function()
     FOVCircle.Visible = false
     AccuracyLine.Visible = false
     SmoothnessLine.Visible = false
 end)
 
--- Toggle the circle visibility when ToggleCircleButton is pressed
 ToggleCircleButton.MouseButton1Click:Connect(function()
     CircleVisible = not CircleVisible
     FOVCircle.Visible = CircleVisible
 end)
 
--- Load the script using your provided link
-loadstring(game:HttpGet("https://raw.githubusercontent.com/chika200/aimbot-mm2/refs/heads/main/aimbot"))()
+SensitivitySlider.MouseButton1Click:Connect(function()
+    Settings.Sensitivity2 = Settings.Sensitivity2 + 1
+    SensitivitySlider.Text = "Sensitivity: " .. Settings.Sensitivity2
+end)
+
+LockPartDropdown.MouseButton1Click:Connect(function()
+    if Settings.LockPart == "Head" then
+        Settings.LockPart = "Torso"
+    else
+        Settings.LockPart = "Head"
+    end
+    LockPartDropdown.Text = "LockPart: " .. Settings.LockPart
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    Settings.Enabled = not Settings.Enabled
+    ToggleButton.Text = Settings.Enabled and "Disable Aimbot" or "Enable Aimbot"
+end)
+
+-- Run the update loop
+RunService.RenderStepped:Connect(Update)
+UserInputService.InputBegan:Connect(HandleInput)
