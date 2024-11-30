@@ -1,7 +1,7 @@
 --[[
 
     Universal Aimbot Module by Exunys © CC0 1.0 Universal (2023 - 2024)
-    Updated by Gebreel (Chika) for full GUI customization.
+    Updated by Gebreel (Chika) for locking onto the torso with high accuracy.
 
 ]]
 
@@ -37,12 +37,7 @@ getgenv().ExunysDeveloperAimbot = {
         LockPart = "Torso", -- Lock onto the torso. For R15 rigs, change to "UpperTorso".
 
         TriggerKey = Enum.UserInputType.MouseButton2,
-        Toggle = false,
-
-        HideKey = Enum.KeyCode.LeftControl, -- Default hide key is LeftControl
-        CursorCircle = true, -- Show/Hide Cursor Circle
-        Accuracy = 50,  -- Accuracy for aiming
-        Smoothness = 50, -- Smoothness for aim transition
+        Toggle = false
     },
 
     FOVSettings = {
@@ -84,12 +79,11 @@ Environment.Load()
 -- Creating the main GUI container
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
-local AccuracySlider = Instance.new("Slider")
-local SmoothnessSlider = Instance.new("Slider")
+local AccuracySliderBackground = Instance.new("Frame")
+local AccuracySlider = Instance.new("TextButton")
+local SmoothnessSliderBackground = Instance.new("Frame")
+local SmoothnessSlider = Instance.new("TextButton")
 local BodySelector = Instance.new("TextButton")
-local HideKeyButton = Instance.new("TextButton")
-local ToggleCursorButton = Instance.new("TextButton")
-local HideButton = Instance.new("TextButton")
 
 -- Set the parent of the GUI to the player's PlayerGui
 ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
@@ -97,91 +91,53 @@ ScreenGui.Name = "AimbotGui"
 
 -- Setup the main frame
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundTransparency = 1  -- Completely transparent
+MainFrame.BackgroundTransparency = 0.5
 MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 MainFrame.Size = UDim2.new(0, 300, 0, 500)
 MainFrame.Position = UDim2.new(0, 100, 0, 100)
 MainFrame.BorderRadius = UDim.new(0, 10)
 MainFrame.Draggable = true  -- Make the frame draggable
 
--- Setup Accuracy slider
-AccuracySlider.Parent = MainFrame
-AccuracySlider.Size = UDim2.new(0, 250, 0, 30)
-AccuracySlider.Position = UDim2.new(0, 25, 0, 50)
-AccuracySlider.Text = "Accuracy: " .. Environment.Settings.Accuracy
-AccuracySlider.Min = 0
-AccuracySlider.Max = 100
-AccuracySlider.ValueChanged:Connect(function(val)
-    Environment.Settings.Accuracy = math.floor(val)
-end)
+-- Setup Accuracy slider background (as a frame)
+AccuracySliderBackground.Parent = MainFrame
+AccuracySliderBackground.Size = UDim2.new(0, 250, 0, 20)
+AccuracySliderBackground.Position = UDim2.new(0, 25, 0, 50)
+AccuracySliderBackground.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 
--- Setup Smoothness slider
-SmoothnessSlider.Parent = MainFrame
-SmoothnessSlider.Size = UDim2.new(0, 250, 0, 30)
-SmoothnessSlider.Position = UDim2.new(0, 25, 0, 100)
-SmoothnessSlider.Text = "Smoothness: " .. Environment.Settings.Smoothness
-SmoothnessSlider.Min = 0
-SmoothnessSlider.Max = 100
-SmoothnessSlider.ValueChanged:Connect(function(val)
-    Environment.Settings.Smoothness = math.floor(val)
-end)
+-- Setup Accuracy slider (as a TextButton)
+AccuracySlider.Parent = AccuracySliderBackground
+AccuracySlider.Size = UDim2.new(0, 50, 0, 20)
+AccuracySlider.Position = UDim2.new(0, 0, 0, 0)
+AccuracySlider.Text = "50"
+AccuracySlider.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+AccuracySlider.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- Setup Body selector (Torso/Head/Legs selection)
+-- Setup Smoothness slider background (as a frame)
+SmoothnessSliderBackground.Parent = MainFrame
+SmoothnessSliderBackground.Size = UDim2.new(0, 250, 0, 20)
+SmoothnessSliderBackground.Position = UDim2.new(0, 25, 0, 100)
+SmoothnessSliderBackground.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+
+-- Setup Smoothness slider (as a TextButton)
+SmoothnessSlider.Parent = SmoothnessSliderBackground
+SmoothnessSlider.Size = UDim2.new(0, 50, 0, 20)
+SmoothnessSlider.Position = UDim2.new(0, 0, 0, 0)
+SmoothnessSlider.Text = "50"
+SmoothnessSlider.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+SmoothnessSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- Setup Body selector (Torso/Head selection)
 BodySelector.Parent = MainFrame
 BodySelector.Size = UDim2.new(0, 250, 0, 50)
 BodySelector.Position = UDim2.new(0, 25, 0, 150)
 BodySelector.Text = "Select Target: Torso"
+
+-- Toggle between Torso and Head
 BodySelector.MouseButton1Click:Connect(function()
     if BodySelector.Text == "Select Target: Torso" then
         BodySelector.Text = "Select Target: Head"
-        Environment.Settings.LockPart = "Head"
-    elseif BodySelector.Text == "Select Target: Head" then
-        BodySelector.Text = "Select Target: Legs"
-        Environment.Settings.LockPart = "Legs"
     else
         BodySelector.Text = "Select Target: Torso"
-        Environment.Settings.LockPart = "Torso"
-    end
-end)
-
--- Setup Hide Key button
-HideKeyButton.Parent = MainFrame
-HideKeyButton.Size = UDim2.new(0, 250, 0, 50)
-HideKeyButton.Position = UDim2.new(0, 25, 0, 200)
-HideKeyButton.Text = "Set Hide Key (Current: " .. Environment.Settings.HideKey.Name .. ")"
-HideKeyButton.MouseButton1Click:Connect(function()
-    local input = UserInputService.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Keyboard then
-            Environment.Settings.HideKey = input.KeyCode
-            HideKeyButton.Text = "Set Hide Key (Current: " .. Environment.Settings.HideKey.Name .. ")"
-            input:Stop()
-        end
-    end)
-end)
-
--- Setup Toggle Cursor button
-ToggleCursorButton.Parent = MainFrame
-ToggleCursorButton.Size = UDim2.new(0, 250, 0, 50)
-ToggleCursorButton.Position = UDim2.new(0, 25, 0, 250)
-ToggleCursorButton.Text = "Toggle Cursor Circle"
-ToggleCursorButton.MouseButton1Click:Connect(function()
-    Environment.Settings.CursorCircle = not Environment.Settings.CursorCircle
-    ToggleCursorButton.Text = Environment.Settings.CursorCircle and "Hide Cursor Circle" or "Show Cursor Circle"
-end)
-
--- Setup Hide GUI button
-HideButton.Parent = MainFrame
-HideButton.Size = UDim2.new(0, 250, 0, 50)
-HideButton.Position = UDim2.new(0, 25, 0, 300)
-HideButton.Text = "Hide/Show GUI"
-HideButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
-
--- Hide the GUI by default if HideKey is pressed
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == Environment.Settings.HideKey then
-        MainFrame.Visible = not MainFrame.Visible
     end
 end)
 
