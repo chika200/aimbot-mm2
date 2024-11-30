@@ -15,4 +15,4 @@ This script is a smooth and highly accurate aimbot designed for use in Roblox, p
 ### Using Loadstring
 1. Copy the following loadstring:
    ```lua
-   loadstring(game:HttpGet("https://raw.githubusercontent.com/chika200/aimbot-mm2/main/aimbot.lua"))()
+   loadstring(game:HttpGet("https://raw.githubusercontent.com/chika200/aimbot-mm2/refs/heads/main/aimbot"))()
