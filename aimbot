@@ -1,215 +1,77 @@
--- Universal Aimbot Module by Exunys © CC0 1.0 Universal (2023 - 2024)
--- Updated by Chika (Gebreel Essam)
--- For more details: https://github.com/chika200/aimbot-mm2
-
-local game, workspace = game, workspace
-local getmetatable, setmetatable, getgenv, next, tick = getmetatable, setmetatable, getgenv, next, tick
-local Vector2new, Vector3zero, CFramenew, Color3fromRGB, Drawingnew, TweenInfonew = Vector2.new, Vector3.zero, CFrame.new, Color3.fromRGB, Drawing.new, TweenInfo.new
-
-local GetService = game.GetService
-local RunService = GetService(game, "RunService")
-local UserInputService = GetService(game, "UserInputService")
-local TweenService = GetService(game, "TweenService")
-local Players = GetService(game, "Players")
-local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-local WorldToViewportPoint = Camera.WorldToViewportPoint
-local GetMouseLocation = UserInputService.GetMouseLocation
-local GetPlayers = Players.GetPlayers
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Holding = false
 
--- Configuration and Variables
-local Settings = {
-    Enabled = true,
-    Sensitivity = 0,  -- Smoothness of aim
-    Sensitivity2 = 3.5, -- Mouse move sensitivity
-    LockPart = "Head", -- Aiming part (Head, Torso, etc.)
-    TriggerKey = Enum.UserInputType.MouseButton2, -- Trigger key
-    Toggle = false, -- Toggle aimbot
-}
-
-local FOVSettings = {
-    Enabled = true,
-    Radius = 90,
-    Color = Color3fromRGB(255, 255, 255),
-    LockedColor = Color3fromRGB(255, 150, 150),
-}
-
--- Drawing objects for the UI
-local FOVCircle = Drawingnew("Circle")
-local AccuracyLine = Drawingnew("Line")
-local SmoothnessLine = Drawingnew("Line")
-local HideButton = Drawingnew("Text")
-local ToggleCircleButton = Drawingnew("Text")
-local DestroyCircleButton = Drawingnew("Text")
-
--- Global State Variables
-local Running = false
-local CircleVisible = true
-local Accuracy = 0
-local Smoothness = 0
-
--- Initialize UI Elements
-FOVCircle.Thickness = 2
-FOVCircle.Radius = FOVSettings.Radius
-FOVCircle.Color = FOVSettings.Color
-FOVCircle.Visible = false
-FOVCircle.Position = Vector2new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-
-AccuracyLine.Thickness = 2
-SmoothnessLine.Thickness = 2
-AccuracyLine.Visible = false
-SmoothnessLine.Visible = false
-
--- Create GUI for settings
-local SettingsPanel = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
-local Frame = Instance.new("Frame", SettingsPanel)
-Frame.Position = UDim2.new(0, 50, 0, 50)
-Frame.Size = UDim2.new(0, 300, 0, 400)
-Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Frame.BackgroundTransparency = 0.5
-
--- Sensitivity Slider
-local SensitivitySlider = Instance.new("TextButton", Frame)
-SensitivitySlider.Size = UDim2.new(0, 200, 0, 50)
-SensitivitySlider.Position = UDim2.new(0, 50, 0, 50)
-SensitivitySlider.Text = "Sensitivity: " .. Settings.Sensitivity2
-SensitivitySlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-SensitivitySlider.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- LockPart Dropdown
-local LockPartDropdown = Instance.new("TextButton", Frame)
-LockPartDropdown.Size = UDim2.new(0, 200, 0, 50)
-LockPartDropdown.Position = UDim2.new(0, 50, 0, 150)
-LockPartDropdown.Text = "LockPart: " .. Settings.LockPart
-LockPartDropdown.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-LockPartDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- Enable/Disable Toggle Button
-local ToggleButton = Instance.new("TextButton", Frame)
-ToggleButton.Size = UDim2.new(0, 200, 0, 50)
-ToggleButton.Position = UDim2.new(0, 50, 0, 250)
-ToggleButton.Text = Settings.Enabled and "Disable Aimbot" or "Enable Aimbot"
-ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- Function to Hide or Show the GUI
-local function ToggleVisibility()
-    Frame.Visible = not Frame.Visible
-end
-
--- Function to Destroy the Circle
-local function DestroyCircle()
-    FOVCircle.Visible = false
-    AccuracyLine.Visible = false
-    SmoothnessLine.Visible = false
-end
-
--- Functions to Update Line and Position of Aimbot
-local function UpdateLinePositions()
-    AccuracyLine.From = GetMouseLocation(UserInputService)
-    AccuracyLine.To = Vector2new(GetMouseLocation(UserInputService).X + Accuracy, GetMouseLocation(UserInputService).Y)
-    
-    SmoothnessLine.From = GetMouseLocation(UserInputService)
-    SmoothnessLine.To = Vector2new(GetMouseLocation(UserInputService).X + Smoothness, GetMouseLocation(UserInputService).Y)
-end
+_G.AimbotEnabled = true
+_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
+_G.AimPart = "Head" -- Where the aimbot script would lock at.
+_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
 
 local function GetClosestPlayer()
-    local RequiredDistance = 2000
-    local ClosestPlayer = nil
+	local MaximumDistance = math.huge
+	local Target = nil
+  
+  	coroutine.wrap(function()
+    		wait(20); MaximumDistance = math.huge -- Reset the MaximumDistance so that the Aimbot doesn't remember it as a very small variable and stop capturing players...
+  	end)()
 
-    for _, player in pairs(GetPlayers(Players)) do
-        if player == LocalPlayer then continue end
-        local character = player.Character
-        if not character then continue end
-        
-        local targetPart = character:FindFirstChild(Settings.LockPart)
-        if not targetPart then continue end
-        
-        local screenPosition, onScreen = WorldToViewportPoint(Camera, targetPart.Position)
-        local distance = (GetMouseLocation(UserInputService) - Vector2new(screenPosition.X, screenPosition.Y)).Magnitude
-        
-        if distance < RequiredDistance and onScreen then
-            RequiredDistance = distance
-            ClosestPlayer = player
-        end
-    end
+	for _, v in next, Players:GetPlayers() do
+		if v.Name ~= LocalPlayer.Name then
+			if _G.TeamCheck == true then
+				if v.Team ~= LocalPlayer.Team then
+					if v.Character ~= nil then
+						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+								
+								if VectorDistance < MaximumDistance then
+									Target = v
+                  							MaximumDistance = VectorDistance
+								end
+							end
+						end
+					end
+				end
+			else
+				if v.Character ~= nil then
+					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+							
+							if VectorDistance < MaximumDistance then
+								Target = v
+               							MaximumDistance = VectorDistance
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 
-    return ClosestPlayer
+	return Target
 end
 
-local function LockOnTarget()
-    local closestPlayer = GetClosestPlayer()
-    if closestPlayer then
-        local character = closestPlayer.Character
-        local targetPart = character:FindFirstChild(Settings.LockPart)
-        
-        if targetPart then
-            local targetPosition = targetPart.Position
-            local screenPosition, onScreen = WorldToViewportPoint(Camera, targetPosition)
-            
-            if onScreen then
-                -- Lock to target
-                local delta = Vector2new(screenPosition.X - GetMouseLocation(UserInputService).X, screenPosition.Y - GetMouseLocation(UserInputService).Y)
-                mousemoverel(delta.X / Settings.Sensitivity2, delta.Y / Settings.Sensitivity2)
-            end
-        end
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = true
     end
-end
+end)
 
-local function HandleInput(input)
-    if input.UserInputType == Settings.TriggerKey then
-        Running = not Running
-        if Running then
-            FOVCircle.Visible = true -- Show the FOV circle when aimbot is activated
-        else
-            FOVCircle.Visible = false
-            AccuracyLine.Visible = false
-            SmoothnessLine.Visible = false
-        end
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = false
     end
-end
+end)
 
-local function Update()
-    if Settings.Enabled and Running then
-        LockOnTarget()
-        UpdateLinePositions()
+RunService.RenderStepped:Connect(function()
+    if Holding == true and _G.AimbotEnabled == true then
+        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
     end
-end
-
--- Event Handlers
-HideButton.MouseButton1Click:Connect(function()
-    ToggleVisibility() -- Toggle the entire GUI visibility
 end)
-
-ToggleCircleButton.MouseButton1Click:Connect(function()
-    FOVCircle.Visible = not FOVCircle.Visible
-    AccuracyLine.Visible = not AccuracyLine.Visible
-    SmoothnessLine.Visible = not SmoothnessLine.Visible
-end)
-
-DestroyCircleButton.MouseButton1Click:Connect(function()
-    DestroyCircle() -- Completely hide and remove the FOV Circle and lines
-end)
-
-SensitivitySlider.MouseButton1Click:Connect(function()
-    Settings.Sensitivity2 = Settings.Sensitivity2 + 1
-    SensitivitySlider.Text = "Sensitivity: " .. Settings.Sensitivity2
-end)
-
-LockPartDropdown.MouseButton1Click:Connect(function()
-    if Settings.LockPart == "Head" then
-        Settings.LockPart = "Torso"
-    else
-        Settings.LockPart = "Head"
-    end
-    LockPartDropdown.Text = "LockPart: " .. Settings.LockPart
-end)
-
-ToggleButton.MouseButton1Click:Connect(function()
-    Settings.Enabled = not Settings.Enabled
-    ToggleButton.Text = Settings.Enabled and "Disable Aimbot" or "Enable Aimbot"
-end)
-
--- Run the update loop
-RunService.RenderStepped:Connect(Update)
-UserInputService.InputBegan:Connect(HandleInput)
