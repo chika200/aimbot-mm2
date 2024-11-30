@@ -74,3 +74,57 @@ end
 
 -- Load the Aimbot
 Environment.Load()
+
+--// GUI Setup
+-- Creating the main GUI container
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local AccuracySlider = Instance.new("Slider")
+local SmoothnessSlider = Instance.new("Slider")
+local BodySelector = Instance.new("TextButton")
+
+-- Set the parent of the GUI to the player's PlayerGui
+ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
+ScreenGui.Name = "AimbotGui"
+
+-- Setup the main frame
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundTransparency = 0.5
+MainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+MainFrame.Size = UDim2.new(0, 300, 0, 500)
+MainFrame.Position = UDim2.new(0, 100, 0, 100)
+MainFrame.BorderRadius = UDim.new(0, 10)
+MainFrame.Draggable = true  -- Make the frame draggable
+
+-- Setup Accuracy slider
+AccuracySlider.Parent = MainFrame
+AccuracySlider.Size = UDim2.new(0, 250, 0, 30)
+AccuracySlider.Position = UDim2.new(0, 25, 0, 50)
+AccuracySlider.Text = "Accuracy: 50"  -- Set initial value
+AccuracySlider.Min = 0
+AccuracySlider.Max = 100
+
+-- Setup Smoothness slider
+SmoothnessSlider.Parent = MainFrame
+SmoothnessSlider.Size = UDim2.new(0, 250, 0, 30)
+SmoothnessSlider.Position = UDim2.new(0, 25, 0, 100)
+SmoothnessSlider.Text = "Smoothness: 50"  -- Set initial value
+SmoothnessSlider.Min = 0
+SmoothnessSlider.Max = 100
+
+-- Setup Body selector (Torso/Head selection)
+BodySelector.Parent = MainFrame
+BodySelector.Size = UDim2.new(0, 250, 0, 50)
+BodySelector.Position = UDim2.new(0, 25, 0, 150)
+BodySelector.Text = "Select Target: Torso"
+
+-- Toggle between Torso and Head
+BodySelector.MouseButton1Click:Connect(function()
+    if BodySelector.Text == "Select Target: Torso" then
+        BodySelector.Text = "Select Target: Head"
+    else
+        BodySelector.Text = "Select Target: Torso"
+    end
+end)
+
+-- End of the script
