@@ -3,7 +3,7 @@
     Universal Aimbot Module by Exunys © CC0 1.0 Universal (2023 - 2024)
     Updated by Gebreel (Chika) for locking onto the torso with high accuracy.
 
-]]
+]]--
 
 --// Cache
 local game, workspace = game, workspace
@@ -138,6 +138,43 @@ BodySelector.MouseButton1Click:Connect(function()
         BodySelector.Text = "Select Target: Head"
     else
         BodySelector.Text = "Select Target: Torso"
+    end
+end)
+
+-- Aim Assist Function
+local function LockOntoTarget()
+    local closestTarget = nil
+    local shortestDistance = math.huge
+    local mousePosition = UserInputService:GetMouseLocation()
+
+    -- Loop through all players
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild(Environment.Settings.LockPart) then
+            local target = player.Character[Environment.Settings.LockPart]
+            local distance = (target.Position - workspace.CurrentCamera.CFrame.p).Magnitude
+            
+            if distance < shortestDistance and (not Environment.Settings.TeamCheck or player.Team ~= game.Players.LocalPlayer.Team) then
+                closestTarget = target
+                shortestDistance = distance
+            end
+        end
+    end
+
+    if closestTarget then
+        local torsoPos = closestTarget.Position
+        local cameraPos = workspace.CurrentCamera.CFrame.p
+        local direction = (torsoPos - cameraPos).unit
+        local targetCFrame = CFrame.lookAt(cameraPos, torsoPos)
+        
+        -- Lock the camera towards the target with smoothness and sensitivity
+        workspace.CurrentCamera.CFrame = CFrame.new(cameraPos, torsoPos) * CFrame.Angles(0, math.rad(Environment.Settings.Sensitivity), 0)
+    end
+end
+
+-- Detect mouse input to trigger aimbot lock-on
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Environment.Settings.TriggerKey and Environment.Settings.Enabled then
+        LockOntoTarget()
     end
 end)
 
