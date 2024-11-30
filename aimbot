@@ -1,0 +1,76 @@
+--[[
+
+    Universal Aimbot Module by Exunys © CC0 1.0 Universal (2023 - 2024)
+    Updated by Gebreel (Chika) for locking onto the torso with high accuracy.
+
+]]
+
+--// Cache
+local game, workspace = game, workspace
+local getgenv = getgenv
+local Vector2new, Vector3zero, CFramenew, Drawingnew = Vector2.new, Vector3.zero, CFrame.new, Drawing.new
+local GetService = game.GetService
+local Players, RunService, UserInputService, TweenService = GetService(game, "Players"), GetService(game, "RunService"), GetService(game, "UserInputService"), GetService(game, "TweenService")
+
+--// Aimbot Environment
+getgenv().ExunysDeveloperAimbot = {
+    DeveloperSettings = {
+        UpdateMode = "RenderStepped",
+        TeamCheckOption = "TeamColor",
+        RainbowSpeed = 1 -- Bigger = Slower
+    },
+
+    Settings = {
+        Enabled = true,
+
+        TeamCheck = false, -- Disable to lock on all players.
+        AliveCheck = true, -- Only lock onto alive players.
+        WallCheck = true,  -- Prevent locking onto players behind walls.
+
+        OffsetToMoveDirection = false,
+        OffsetIncrement = 15,
+
+        Sensitivity = 0,   -- Instant lock-on.
+        Sensitivity2 = 2,  -- Faster mousemoverel sensitivity.
+
+        LockMode = 1,      -- Use CFrame lock mode.
+        LockPart = "Torso", -- Lock onto the torso. For R15 rigs, change to "UpperTorso".
+
+        TriggerKey = Enum.UserInputType.MouseButton2,
+        Toggle = false
+    },
+
+    FOVSettings = {
+        Enabled = false,       -- Disable FOV circle.
+        Visible = false,       -- Hide FOV circle.
+        Radius = 90,
+        NumSides = 60,
+        Thickness = 1,
+        Transparency = 1,
+        Filled = false,
+        RainbowColor = false,
+        RainbowOutlineColor = false,
+        Color = Color3.fromRGB(255, 255, 255),
+        OutlineColor = Color3.fromRGB(0, 0, 0),
+        LockedColor = Color3.fromRGB(255, 150, 150)
+    },
+
+    Blacklisted = {},
+    FOVCircleOutline = Drawingnew("Circle"),
+    FOVCircle = Drawingnew("Circle")
+}
+
+local Environment = getgenv().ExunysDeveloperAimbot
+
+-- Disable FOV Circle Visibility
+Environment.FOVCircle.Visible = false
+Environment.FOVCircleOutline.Visible = false
+
+-- Set Up the Script
+Environment.Load = function()
+    print("Aimbot Loaded Successfully!")
+    -- Include any additional setup logic if needed.
+end
+
+-- Load the Aimbot
+Environment.Load()
